@@ -8,6 +8,7 @@ from app.database import get_db, engine, Base
 from app.models import FinancialReportModel
 from app.processor import process_financial_report
 from app.aggregator import get_portfolio_summary
+from app.insights import generate_financial_insights
 
 # Ensure tables exist on startup
 Base.metadata.create_all(bind=engine)
@@ -49,3 +50,10 @@ def upload_report(file: UploadFile = File(...), db: Session = Depends(get_db)):
 @app.get("/portfolio/summary", summary="Get aggregated portfolio financial statistics")
 def portfolio_summary(db: Session = Depends(get_db)):
     return get_portfolio_summary(db)
+
+@app.get("/reports/{report_id}/insights", summary="Get automated financial health grade and executive insights")
+def get_report_insights(report_id: int, db: Session = Depends(get_db)):
+    report = db.query(FinancialReportModel).filter(FinancialReportModel.id == report_id).first()
+    if not report:
+        raise HTTPException(status_code=404, detail="Financial report not found.")
+    return generate_financial_insights(report)
