@@ -19,6 +19,13 @@ app = FastAPI(
     description="Professional-grade financial report parser and KPI analytics API",
     version="1.0.0"
 )
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allows all origins for local development
+    allow_credentials=True,
+    allow_methods=["*"],  # Allows all methods (GET, POST, etc.)
+    allow_headers=["*"],  # Allows all headers
+)
 
 @app.get("/")
 def read_root():
