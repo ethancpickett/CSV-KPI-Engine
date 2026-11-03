@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Financial KPI Engine Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Include Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen font-sans">
+    <div class="max-w-6xl mx-auto px-4 py-8">
+        <!-- Header -->
+        <header class="mb-8 border-b border-slate-800 pb-4 flex justify-between items-center">
+            <div>
+                <h1 class="text-3xl font-bold tracking-tight text-emerald-400">Financial KPI Engine</h1>
+                <p class="text-slate-400 text-sm mt-1">Automated Financial Analysis, Health Grading, & Historical Intelligence</p>
+            </div>
+            <button onclick="refreshDashboard()" class="bg-slate-800 hover:bg-slate-700 text-emerald-300 px-4 py-2 rounded-lg text-sm font-medium transition border border-slate-700">
+                Refresh Dashboard
+            </button>
+        </header>
+
+        <!-- Main Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Upload & Report Section -->
+            <div class="lg:col-span-1 bg-slate-800/50 border border-slate-800 rounded-xl p-6 shadow-xl space-y-6">
+                <div>
+                    <h2 class="text-xl font-semibold mb-4 text-emerald-300">Upload Financial Report</h2>
+                    <form id="uploadForm" class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-300 mb-2">Select Financial CSV</label>
+                            <input type="file" id="csvFile" accept=".csv" required
+                                class="block w-full text-sm text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-emerald-500/10 file:text-emerald-400 hover:file:bg-emerald-500/20 cursor-pointer">
+                        </div>
+                        <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-medium py-2.5 px-4 rounded-lg transition shadow-lg shadow-emerald-900/30">
+                            Upload & Analyze
+                        </button>
+                    </form>
+                </div>
+
+                <div id="uploadResult" class="hidden">
+                    <h3 class="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-2">Latest Upload Result</h3>
+                    <div id="resultContent" class="bg-slate-900 p-4 rounded-lg border border-slate-800 text-sm space-y-1"></div>
+                </div>
+
+                <!-- Automated Insights Card -->
+                <div class="bg-slate-900/80 border border-slate-800 rounded-xl p-5 shadow-lg">
+                    <div class="flex justify-between items-center mb-3">
+                        <h3 class="text-md font-semibold text-emerald-300">Health & Insights</h3>
+                        <span id="healthGradeBadge" class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-slate-800 text-slate-300">No Data</span>
+                    </div>
+                    <div id="insightsContainer" class="space-y-3 text-xs text-slate-300">
+                        <p class="text-slate-500 italic">Upload a report to view automated evaluation.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dashboard Metrics & Historical Charts -->
+            <div class="lg:col-span-2 space-y-6">
+                <!-- Portfolio Summary Card -->
+                <div class="bg-slate-800/50 border border-slate-800 rounded-xl p-6 shadow-xl">
+                    <h2 class="text-xl font-semibold mb-4 text-emerald-300">Portfolio Overview</h2>
+                    <div id="portfolioGrid" class="grid grid-cols-3 gap-4">
+                        <div class="bg-slate-900 p-4 rounded-lg border border-slate-800">
+                            <p class="text-xs text-slate-400 uppercase">Reports Analyzed</p>
+                            <p id="portCount" class="text-2xl font-bold text-slate-100 mt-1">0</p>
+                        </div>
+                        <div class="bg-slate-900 p-4 rounded-lg border border-slate-800">
+                            <p class="text-xs text-slate-400 uppercase">Avg Working Capital</p>
+                            <p id="portWC" class="text-xl font-bold text-emerald-400 mt-1">$0.00</p>
+                        </div>
+                        <div class="bg-slate-900 p-4 rounded-lg border border-slate-800">
+                            <p class="text-xs text-slate-400 uppercase">Avg Quick Ratio</p>
+                            <p id="portQR" class="text-2xl font-bold text-blue-400 mt-1">0.00</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Historical Trend Chart Card -->
+                <div class="bg-slate-800/50 border border-slate-800 rounded-xl p-6 shadow-xl">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-xl font-semibold text-emerald-300">Historical Liquidity & Profitability Trends</h2>
+                        <select id="metricSelector" onchange="updateChart()" class="bg-slate-900 text-slate-200 border border-slate-700 rounded-lg px-3 py-1 text-xs focus:outline-none focus:border-emerald-500">
+                            <option value="working_capital">Working Capital ($)</option>
+                            <option value="quick_ratio">Quick Ratio</option>
+                            <option value="operating_margin">Operating Margin (%)</option>
+                            <option value="return_on_equity">Return on Equity (%)</option>
+                        </select>
+                    </div>
+                    <div class="bg-slate-900 p-4 rounded-lg border border-slate-800 h-72 relative">
+                        <canvas id="trendChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = "http://127.0.0.1:8000";
+        let trendChartInstance = null;
+        let historicalData = [];
+
+        async function refreshDashboard() {
+            await fetchPortfolioSummary();
+            await fetchHistory();
+        }
+
+        async function fetchPortfolioSummary() {
+            try {
+                const response = await fetch(`${API_BASE}/portfolio/summary`);
+                if (response.ok) {
+                    const data = await response.json();
+                    document.getElementById("portCount").innerText = data.total_reports_analyzed || 0;
+                    document.getElementById("portWC").innerText = `$${(data.average_working_capital || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+                    document.getElementById("portQR").innerText = (data.average_quick_ratio || 0).toFixed(2);
+                }
+            } catch (err) {
+                console.error("Failed to fetch portfolio summary:", err);
+            }
+        }
+
+        async function fetchHistory() {
+            try {
+                const response = await fetch(`${API_BASE}/portfolio/history`);
+                if (response.ok) {
+                    historicalData = await response.json();
+                    renderChart(historicalData);
+                }
+            } catch (err) {
+                console.error("Failed to fetch history:", err);
+            }
+        }
+
+        function renderChart(data) {
+            const ctx = document.getElementById('trendChart').getContext('2d');
+            const metric = document.getElementById('metricSelector').value;
+
+            const labels = data.map(d => `Report #${d.id} (${d.filename.substring(0, 12)}...)`);
+            let values = data.map(d => {
+                if (metric === 'operating_margin' || metric === 'return_on_equity') {
+                    return (d[metric] * 100).toFixed(1);
+                }
+                return d[metric];
+            });
+
+            if (trendChartInstance) {
+                trendChartInstance.destroy();
+            }
+
+            trendChartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: metric.replace('_', ' ').toUpperCase(),
+                        data: values,
+                        borderColor: '#34d399',
+                        backgroundColor: 'rgba(52, 211, 153, 0.1)',
+                        borderWidth: 2,
+                        tension: 0.3,
+                        fill: true,
+                        pointBackgroundColor: '#34d399',
+                        pointRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { labels: { color: '#94a3b8', font: { size: 11 } } }
+                    },
+                    scales: {
+                        x: { ticks: { color: '#94a3b8', font: { size: 10 } }, grid: { color: '#334155' } },
+                        y: { ticks: { color: '#94a3b8', font: { size: 10 } }, grid: { color: '#334155' } }
+                    }
+                }
+            });
+        }
+
+        function updateChart() {
+            renderChart(historicalData);
+        }
+
+        document.getElementById("uploadForm").addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const fileInput = document.getElementById("csvFile");
+            if (!fileInput.files.length) return;
+
+            const formData = new FormData();
+            formData.append("file", fileInput.files[0]);
+
+            try {
+                const response = await fetch(`${API_BASE}/reports/upload`, {
+                    method: `${'POST'}`,
+                    body: formData
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    const resultDiv = document.getElementById("uploadResult");
+                    resultDiv.classList.remove("hidden");
+                    
+                    document.getElementById("resultContent").innerHTML = `
+                        <p><span class="text-slate-400">File:</span> ${data.filename}</p>
+                        <p><span class="text-slate-400">Report ID:</span> ${data.report_id}</p>
+                        <p><span class="text-slate-400">Working Capital:</span> $${data.working_capital.toLocaleString()}</p>
+                        <p><span class="text-slate-400">Quick Ratio:</span> ${data.quick_ratio.toFixed(2)}</p>
+                    `;
+
+                    fetchInsights(data.report_id);
+                    refreshDashboard();
+                } else {
+                    alert("Upload failed.");
+                }
+            } catch (err) {
+                console.error("Upload error:", err);
+                alert("Could not connect to backend server.");
+            }
+        });
+
+        async function fetchInsights(reportId) {
+            try {
+                const response = await fetch(`${API_BASE}/reports/${reportId}/insights`);
+                if (response.ok) {
+                    const data = await response.json();
+                    
+                    const badge = document.getElementById("healthGradeBadge");
+                    badge.innerText = data.health_grade.split(' ')[0];
+                    badge.className = `px-2.5 py-0.5 rounded-full text-xs font-bold ${
+                        data.health_score >= 85 ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' :
+                        data.health_score >= 70 ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30' :
+                        'bg-amber-500/20 text-amber-400 border border-amber-500/30'
+                    }`;
+
+                    let html = `<div class="space-y-2">
+                        <div class="flex justify-between"><span class="text-slate-400">Health Score:</span> <span class="font-bold text-emerald-400">${data.health_score}/100</span></div>`;
+                    
+                    if (data.key_strengths.length > 0) {
+                        html += `<p class="text-emerald-400 font-semibold mt-1">Strength: ${data.key_strengths[0]}</p>`;
+                    }
+                    if (data.identified_risks.length > 0) {
+                        html += `<p class="text-amber-400 font-semibold mt-1">Risk: ${data.identified_risks[0]}</p>`;
+                    }
+
+                    html += `</div>`;
+                    document.getElementById("insightsContainer").innerHTML = html;
+                }
+            } catch (err) {
+                console.error("Failed to fetch insights:", err);
+            }
+        }
+
+        // Initial load
+        refreshDashboard();
+    </script>
+</body>
+</html>
