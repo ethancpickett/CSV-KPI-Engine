@@ -65,3 +65,19 @@ def get_report_insights(report_id: int, db: Session = Depends(get_db)):
     if not report:
         raise HTTPException(status_code=404, detail="Financial report not found.")
     return generate_financial_insights(report)
+
+@app.get("/portfolio/history", summary="Get chronological financial history for trend analysis")
+def get_portfolio_history(db: Session = Depends(get_db)):
+    reports = db.query(FinancialReportModel).order_by(FinancialReportModel.id.asc()).all()
+    history = []
+    for r in reports:
+        history.append({
+            "id": r.id,
+            "filename": r.filename,
+            "working_capital": r.working_capital,
+            "quick_ratio": r.quick_ratio,
+            "debt_to_equity": r.debt_to_equity,
+            "operating_margin": r.operating_margin,
+            "return_on_equity": r.return_on_equity
+        })
+    return history
