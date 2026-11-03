@@ -103,6 +103,7 @@
                     </div>
                 </div>
 
+                <!-- Historical Trend Chart Card -->
                 <div class="bg-slate-800/50 border border-slate-800 rounded-xl p-6 shadow-xl">
                     <div class="flex justify-between items-center mb-4">
                         <h2 class="text-xl font-semibold text-emerald-300">Historical Liquidity & Profitability Trends</h2>
@@ -115,6 +116,26 @@
                     </div>
                     <div class="bg-slate-900 p-4 rounded-lg border border-slate-800 h-72 relative">
                         <canvas id="trendChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Manage Reports Card -->
+                <div class="bg-slate-800/50 border border-slate-800 rounded-xl p-6 shadow-xl">
+                    <h2 class="text-xl font-semibold mb-4 text-emerald-300">Manage Uploaded Reports</h2>
+                    <div class="bg-slate-900 rounded-lg border border-slate-800 overflow-hidden">
+                        <table class="w-full text-left text-sm">
+                            <thead class="bg-slate-800 text-slate-400 uppercase text-xs">
+                                <tr>
+                                    <th class="p-3">ID</th>
+                                    <th class="p-3">Filename</th>
+                                    <th class="p-3">Working Capital</th>
+                                    <th class="p-3 text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="reportsTableBody" class="divide-y divide-slate-800 text-slate-300">
+                                <tr><td colspan="4" class="p-4 text-center text-slate-500 italic">No reports found.</td></tr>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
@@ -230,9 +251,52 @@
                 if (response.ok) {
                     historicalData = await response.json();
                     renderChart(historicalData);
+                    renderReportsTable(historicalData);
                 }
             } catch (err) {
                 console.error("Failed to fetch history:", err);
+            }
+        }
+
+        function renderReportsTable(data) {
+            const tbody = document.getElementById("reportsTableBody");
+            if (data.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-slate-500 italic">No reports found.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = data.map(r => `
+                <tr class="hover:bg-slate-800/50 transition">
+                    <td class="p-3 font-mono text-xs text-slate-400">#${r.id}</td>
+                    <td class="p-3 font-medium text-slate-200">${r.filename}</td>
+                    <td class="p-3 text-emerald-400">$${r.working_capital.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                    <td class="p-3 text-right">
+                        <button onclick="deleteReport(${r.id})" class="bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 px-3 py-1 rounded text-xs font-semibold transition">
+                            Delete
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        async function deleteReport(reportId) {
+            if (!confirm(`Are you sure you want to delete Report #${reportId}?`)) return;
+
+            try {
+                const token = localStorage.getItem("token");
+                const res = await fetch(`${API_BASE}/reports/${reportId}`, {
+                    method: "DELETE",
+                    headers: { "Authorization": `Bearer ${token}` }
+                });
+
+                if (res.ok) {
+                    refreshDashboard();
+                } else {
+                    alert("Failed to delete report.");
+                }
+            } catch (err) {
+                console.error("Delete error:", err);
+                alert("Could not connect to server.");
             }
         }
 
@@ -346,7 +410,6 @@
             }
         }
 
-        // Initialize auth check on page load
         checkAuth();
     </script>
 </body>
