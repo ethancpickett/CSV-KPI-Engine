@@ -98,3 +98,17 @@ def get_report_insights(report_id: int, db: Session = Depends(get_db), current_u
     if not report:
         raise HTTPException(status_code=404, detail="Financial report not found or unauthorized")
     return generate_financial_insights(report)
+
+@app.delete("/reports/{report_id}", summary="Delete a financial report")
+def delete_report(report_id: int, db: Session = Depends(get_db), current_user: UserModel = Depends(get_current_user)):
+    report = db.query(FinancialReportModel).filter(
+        FinancialReportModel.id == report_id, 
+        FinancialReportModel.user_id == current_user.id
+    ).first()
+    
+    if not report:
+        raise HTTPException(status_code=404, detail="Report not found or unauthorized")
+    
+    db.delete(report)
+    db.commit()
+    return {"message": "Report successfully deleted"}
