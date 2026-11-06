@@ -3,7 +3,7 @@ from sqlalchemy.orm import relationship
 from datetime import datetime
 from app.database import Base
 
-# <-- Add the UserModel class here -->
+# Add UserModel class
 class UserModel(Base):
     __tablename__ = "users"
 
@@ -21,7 +21,7 @@ class FinancialReportModel(Base):
     filename = Column(String, index=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     
-    # <-- Add user_id foreign key here -->
+    # Add user_id foreign key
     user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
 
     # Raw Balance Sheet & Income Statement line items
@@ -46,5 +46,5 @@ class FinancialReportModel(Base):
 
     parsing_notes = Column(String, nullable=True)
 
-    # <-- Add the owner relationship back-reference here -->
+    # Add the owner relationship back-reference
     owner = relationship("UserModel", back_populates="reports")
