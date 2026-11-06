@@ -10,6 +10,7 @@ services:
       - ./backend:/app
     environment:
       - DATABASE_URL=sqlite:///./financial_analyzer.db
+    restart: unless-stopped  # <-- Keeps it running automatically
 
   frontend:
     build: ./frontend
@@ -20,3 +21,4 @@ services:
       - ./frontend:/app
     depends_on:
       - backend
+    restart: unless-stopped
