@@ -10,31 +10,50 @@
 <body class="bg-slate-900 text-slate-100 min-h-screen font-sans flex flex-col justify-between">
     <!-- Auth Screen Overlay -->
     <div id="authModal" class="fixed inset-0 bg-slate-950/80 z-50 flex items-center justify-center p-4">
-        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-8 max-w-md w-full shadow-2xl space-y-6">
-            <div class="text-center">
-                <h2 class="text-2xl font-bold text-emerald-400">Financial KPI Engine</h2>
-                <p id="authSubtitle" class="text-slate-400 text-sm mt-1">Sign in to access your portfolio</p>
-            </div>
+        <!-- Side-by-Side Flex Container -->
+        <div class="flex flex-col md:flex-row items-stretch justify-center gap-6 max-w-4xl w-full">
             
-            <form id="authForm" class="space-y-4">
-                <div>
-                    <label class="block text-xs font-medium text-slate-300 uppercase mb-1">Username</label>
-                    <input type="text" id="authUsername" required class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2.5 text-slate-100 text-sm focus:outline-none focus:border-emerald-500">
+            <!-- Sign In Card -->
+            <div class="flex-1 bg-slate-900 border border-slate-800 rounded-2xl p-8 shadow-2xl space-y-6">
+                <div class="text-center">
+                    <h2 class="text-2xl font-bold text-emerald-400">Financial KPI Engine</h2>
+                    <p id="authSubtitle" class="text-slate-400 text-sm mt-1">Sign in to access your portfolio</p>
                 </div>
-                <div>
-                    <label class="block text-xs font-medium text-slate-300 uppercase mb-1">Password</label>
-                    <input type="password" id="authPassword" required class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2.5 text-slate-100 text-sm focus:outline-none focus:border-emerald-500">
-                </div>
-                <button type="submit" id="authSubmitBtn" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-medium py-2.5 rounded-lg transition shadow-lg shadow-emerald-900/30">
-                    Sign In
-                </button>
-            </form>
+                
+                <form id="authForm" class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-medium text-slate-300 uppercase mb-1">Username</label>
+                        <input type="text" id="authUsername" required class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2.5 text-slate-100 text-sm focus:outline-none focus:border-emerald-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-300 uppercase mb-1">Password</label>
+                        <input type="password" id="authPassword" required class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2.5 text-slate-100 text-sm focus:outline-none focus:border-emerald-500">
+                    </div>
+                    <button type="submit" id="authSubmitBtn" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-medium py-2.5 rounded-lg transition shadow-lg shadow-emerald-900/30">
+                        Sign In
+                    </button>
+                </form>
 
-            <div class="text-center text-sm">
-                <button onclick="toggleAuthMode()" id="authToggleText" class="text-emerald-400 hover:underline">
-                    Need an account? Register
-                </button>
+                <div class="text-center text-sm">
+                    <button onclick="toggleAuthMode()" id="authToggleText" class="text-emerald-400 hover:underline">
+                        Need an account? Register
+                    </button>
+                </div>
             </div>
+
+            <!-- New Cohesive Info Box -->
+            <div class="flex-1 bg-slate-900/90 border border-slate-800 rounded-2xl p-8 shadow-2xl flex flex-col justify-center space-y-4">
+                <div class="flex items-center gap-3">
+                    <span class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-bold">
+                        ✓
+                    </span>
+                    <h3 class="text-lg font-semibold text-white">Quick Start Access</h3>
+                </div>
+                <p class="text-slate-300 text-sm leading-relaxed">
+                    No E-Mail Required. Sample CSV Files are provided in the GitHub source repository.
+                </p>
+            </div>
+
         </div>
     </div>
 
